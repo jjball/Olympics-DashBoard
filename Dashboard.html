@@ -4,10 +4,15 @@
 		<meta charset="utf-8">
 		<title>A3</title>
 		<script type="text/javascript" src="https://d3js.org/d3.v5.min.js"></script>
+		<script type="text/javascript" src="https://d3js.org/d3-transition.v1.min.js"></script>
 		<style type="text/css">
 		</style>
 	</head>
 	<body>
+    <button id="btnGold">Gold</button>
+    <button id="btnSilver">Silver</button>
+    <button id="btnBronze">Bronze</button>
+  </body>
 
   <script type="text/javascript">
     // Jaden Ball
@@ -16,6 +21,7 @@
     // xtp789
     // CMPT384 Dec 2, 2019
 
+    // globals
     var svg;
 
     // data structures
@@ -25,7 +31,7 @@
 
     // constants
     var width = 800;
-    var height = 400;
+    var height;
 
     var yRowPos = 30;
 
@@ -33,7 +39,7 @@
 
     var xRectPos = xTextPos + 50;
     var rectHeight = 11;
-    var rectWidth = 100;
+    var rectWidth = 200;
 
     // scaling functions
     var widthScale;
@@ -45,12 +51,6 @@
     });
 
     function readInData(){
-      //create svg element
-      svg = d3.select("body")
-            .append("svg")
-            .attr("width", width)
-            .attr("height", height);
-
       // put medal counts in medals object
       dataset.forEach(function(d) {
         if( medals[d.NOC] ){
@@ -86,7 +86,15 @@
             return medals[d].Gold + medals[d].Silver + medals[d].Bronze;
           }),
         ])
-        .range([0, rectWidth]);
+        .range([1, rectWidth]);
+
+
+      //create svg element
+      height = (datalist.length * yRowPos) + (2 * yRowPos);
+      svg = d3.select("body")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
 
       generateVisualization();
     }
@@ -95,9 +103,10 @@
     // draws the visualization using d3
     function generateVisualization(){
 
+      var labels = svg.selectAll('text').data(datalist);
+
       // COUNTRY LABELS
-      svg.selectAll('text')
-        .data(datalist)
+      labels
         .enter()
         .append('text')
         .attr('x', xTextPos)
@@ -109,10 +118,10 @@
           return d.country;
         });
 
-      var bars = svg.selectAll('bar');
+      var bars = svg.selectAll('rect').data(datalist);
 
       // GOLD MEDALS
-      bars.data(datalist)
+      bars
         .enter()
         .append('rect')
         .style('fill', 'gold')
@@ -126,7 +135,7 @@
         });
 
       // SILVER MEDALS
-      bars.data(datalist)
+      bars
         .enter()
         .append('rect')
         .style('fill', 'silver')
@@ -142,7 +151,7 @@
         });
 
       // BRONZE MEDALS
-      bars.data(datalist)
+      bars
         .enter()
         .append('rect')
         .style('fill', '#cd7f32')
@@ -157,6 +166,128 @@
           return widthScale(d.Bronze);
         });
     }
+
+    d3.select('#btnGold')
+      .on('click', function() {
+
+        // var bars = svg.selectAll('rect').data(datalist);
+
+        // // bars.exit()
+        // //   .transition()
+        // //   .duration(500)
+        // //   .attr('y', height)
+        // //   .remove();
+
+        // // sort by gold medal count
+        datalist.sort(function(a, b) {
+          var aVal = a.Gold;
+          var bVal = b.Gold;
+          return d3.descending(aVal, bVal);
+        });
+        // generateVisualization();
+
+        // // reorder rows based on gold medal counts
+        // bars
+        //   .transition()
+        //   .duration(1000)
+        //   .ease(d3.easeLinear)
+        //   .attr('y', function(d, i) {
+        //     return (i+1) * yRowPos - rectHeight;
+        //   });
+
+
+        // labels.transition()
+        //   .duration(1000)
+        //   .attr("y", function(d, i) {
+        //     return (i+1) * yRowPos;
+        //   });
+
+
+        // console.log(JSON.stringify(datalist));
+        svg.selectAll('text')
+          .data(datalist)
+          .transition()
+          .duration(1000)
+          .ease(d3.easeLinear)
+          .attr('x', xTextPos)
+          .attr('y', function(d, i) {
+            return (i+1) * yRowPos;
+          })
+          .style('fill',  'black')
+          .text( function (d) {
+            return d.country;
+          });
+
+        // svg.selectAll('rect')
+        //   .data(datalist)
+        //   .transition()
+        //   .duration(1000)
+        //   .ease(d3.easeLinear)
+        //   .attr('y', function(d, i) {
+        //     console.log(d.country + " " + i);
+        //     return (i+1) * yRowPos - rectHeight;
+        //   })
+        svg.selectAll('rect').remove();
+        generateVisualization();
+        console.log("filtered");
+      });
+
+    d3.select('#btnSilver')
+      .on('click', function() {
+
+        // sort by silver medal count
+        datalist.sort(function(a, b) {
+          var aVal = a.Silver;
+          var bVal = b.Silver;
+          return d3.descending(aVal, bVal);
+        });
+
+        svg.selectAll('text')
+          .data(datalist)
+          .transition()
+          .duration(1000)
+          .ease(d3.easeLinear)
+          .attr('x', xTextPos)
+          .attr('y', function(d, i) {
+            return (i+1) * yRowPos;
+          })
+          .style('fill',  'black')
+          .text( function (d) {
+            return d.country;
+          });
+
+        svg.selectAll('rect').remove();
+        generateVisualization();
+      });
+
+    d3.select('#btnBronze')
+      .on('click', function() {
+
+        // sort by silver medal count
+        datalist.sort(function(a, b) {
+          var aVal = a.Bronze;
+          var bVal = b.Bronze;
+          return d3.descending(aVal, bVal);
+        });
+
+        svg.selectAll('text')
+          .data(datalist)
+          .transition()
+          .duration(1000)
+          .ease(d3.easeLinear)
+          .attr('x', xTextPos)
+          .attr('y', function(d, i) {
+            return (i+1) * yRowPos;
+          })
+          .style('fill',  'black')
+          .text( function (d) {
+            return d.country;
+          });
+
+        svg.selectAll('rect').remove();
+        generateVisualization();
+      });
+
 
 
   </script>
