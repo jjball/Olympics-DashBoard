@@ -9,159 +9,157 @@
 	</head>
 	<body>
 
+  <script type="text/javascript">
+    // Jaden Ball
+    // jjb465
+    // Xuan Phuong
+    // xtp789
+    // CMPT384 Dec 2, 2019
 
-		<script type="text/javascript">
-			// Jaden Ball
-			// jjb465
-			// Xuan Phuong
-			// xtp789
-			// CMPT384 Dec 2, 2019
+    var svg;
 
-      var svg;
+    // data structures
+    var dataset;
+    var medals = {};
+    var datalist = [];
 
-      // data structures
-			var dataset;
-			var medals = {};
-			var datalist = [];
+    // constants
+    var width = 800;
+    var height = 400;
 
-      // constants
-      var width = 800;
-			var height = 400;
+    var yRowPos = 30;
 
-      var yRowPos = 30;
+    var xTextPos = 10;
 
-      var xTextPos = 10;
+    var xRectPos = xTextPos + 50;
+    var rectHeight = 11;
+    var rectWidth = 100;
 
-      var xRectPos = xTextPos + 50;
-      var rectHeight = 11;
-      var rectWidth = 100;
+    // scaling functions
+    var widthScale;
 
-      // scaling functions
-      var widthScale;
+    //Read the data
+    d3.csv("Olympic-Data.csv").then(function(data) {
+      dataset = data;
+      readInData();
+    });
 
-			//Read the data
-			d3.csv("Olympic-Data.csv").then(function(data) {
-				dataset = data;
-				readInData();
-			});
+    function readInData(){
+      //create svg element
+      svg = d3.select("body")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
 
-			function readInData(){
-				//create svg element
-				svg = d3.select("body")
-							.append("svg")
-							.attr("width", width)
-							.attr("height", height);
+      // put medal counts in medals object
+      dataset.forEach(function(d) {
+        if( medals[d.NOC] ){
+          medals[d.NOC][d.Medal] += 1;
+        } else {
+          medals[d.NOC] = {};
+          medals[d.NOC]["Gold"] = 0;
+          medals[d.NOC]["Silver"] = 0;
+          medals[d.NOC]["Bronze"] = 0;
+          medals[d.NOC][d.Medal] += 1;
+        }
+      });
 
-				// put medal counts in medals object
-				dataset.forEach(function(d) {
-					if( medals[d.NOC] ){
-						medals[d.NOC][d.Medal] += 1;
-					} else {
-						medals[d.NOC] = {};
-						medals[d.NOC]["Gold"] = 0;
-						medals[d.NOC]["Silver"] = 0;
-						medals[d.NOC]["Bronze"] = 0;
-						medals[d.NOC][d.Medal] += 1;
-					}
-				});
+      // create a list of the data for easy sorting
+      datalist = Object.keys(medals).map(function(country) {
+        return { country, ...medals[country] };
+      });
 
-        // create a list of the data for easy sorting
-				datalist = Object.keys(medals).map(function(country) {
-					return { country, ...medals[country] };
-				});
+      // sort by total medal count
+      datalist.sort(function(a, b) {
+        var aVal = a.Gold + a.Silver + a.Bronze;
+        var bVal = b.Gold + b.Silver + b.Bronze;
+        return d3.descending(aVal, bVal);
+      });
 
-        // sort by total medal count
-				datalist.sort(function(a, b) {
-					var aVal = a.Gold + a.Silver + a.Bronze;
-					var bVal = b.Gold + b.Silver + b.Bronze;
-					return d3.descending(aVal, bVal);
-				});
+      // scale based on medal counts
+      widthScale = d3.scaleLinear()
+        .domain([
+          d3.min(Object.keys(medals), function(d) {
+            return medals[d].Gold + medals[d].Silver + medals[d].Bronze;
+          }),
+          d3.max(Object.keys(medals), function(d) {
+            return medals[d].Gold + medals[d].Silver + medals[d].Bronze;
+          }),
+        ])
+        .range([0, rectWidth]);
 
-        // scale based on medal counts
-        widthScale = d3.scaleLinear()
-          .domain([
-            d3.min(Object.keys(medals), function(d) {
-              return medals[d].Gold + medals[d].Silver + medals[d].Bronze;
-            }),
-            d3.max(Object.keys(medals), function(d) {
-              return medals[d].Gold + medals[d].Silver + medals[d].Bronze;
-            }),
-          ])
-          .range([0, rectWidth]);
-
-				generateVisualization();
-			}
-
-
-			// draws the visualization using d3
-			function generateVisualization(){
-
-        // COUNTRY LABELS
-        svg.selectAll('text')
-          .data(datalist)
-          .enter()
-          .append('text')
-          .attr('x', xTextPos)
-          .attr('y', function(d, i) {
-            return (i+1) * yRowPos;
-          })
-          .style('fill',  'black')
-          .text( function (d) {
-            return d.country;
-          });
-
-        var bars = svg.selectAll('bar');
-
-        // GOLD MEDALS
-        bars.data(datalist)
-          .enter()
-          .append('rect')
-          .style('fill', 'gold')
-          .attr('x', xRectPos)
-          .attr('y', function(d, i) {
-            return (i+1) * yRowPos - rectHeight;
-          })
-          .attr('height', rectHeight)
-          .attr('width', function(d) {
-            return widthScale(d.Gold);
-          });
-
-        // SILVER MEDALS
-        bars.data(datalist)
-          .enter()
-          .append('rect')
-          .style('fill', 'silver')
-          .attr('x', function(d) {
-            return xRectPos + widthScale(d.Gold);
-          })
-          .attr('y', function(d, i) {
-            return (i+1) * yRowPos - rectHeight;
-          })
-          .attr('height', rectHeight)
-          .attr('width', function(d) {
-            return widthScale(d.Silver);
-          });
-
-        // BRONZE MEDALS
-        bars.data(datalist)
-          .enter()
-          .append('rect')
-          .style('fill', '#cd7f32')
-          .attr('x', function(d) {
-            return xRectPos + widthScale(d.Gold) + widthScale(d.Silver);
-          })
-          .attr('y', function(d, i) {
-            return (i+1) * yRowPos - rectHeight;
-          })
-          .attr('height', rectHeight)
-          .attr('width', function(d) {
-            return widthScale(d.Bronze);
-          });
-			}
+      generateVisualization();
+    }
 
 
-		</script>
-	</body>
+    // draws the visualization using d3
+    function generateVisualization(){
+
+      // COUNTRY LABELS
+      svg.selectAll('text')
+        .data(datalist)
+        .enter()
+        .append('text')
+        .attr('x', xTextPos)
+        .attr('y', function(d, i) {
+          return (i+1) * yRowPos;
+        })
+        .style('fill',  'black')
+        .text( function (d) {
+          return d.country;
+        });
+
+      var bars = svg.selectAll('bar');
+
+      // GOLD MEDALS
+      bars.data(datalist)
+        .enter()
+        .append('rect')
+        .style('fill', 'gold')
+        .attr('x', xRectPos)
+        .attr('y', function(d, i) {
+          return (i+1) * yRowPos - rectHeight;
+        })
+        .attr('height', rectHeight)
+        .attr('width', function(d) {
+          return widthScale(d.Gold);
+        });
+
+      // SILVER MEDALS
+      bars.data(datalist)
+        .enter()
+        .append('rect')
+        .style('fill', 'silver')
+        .attr('x', function(d) {
+          return xRectPos + widthScale(d.Gold);
+        })
+        .attr('y', function(d, i) {
+          return (i+1) * yRowPos - rectHeight;
+        })
+        .attr('height', rectHeight)
+        .attr('width', function(d) {
+          return widthScale(d.Silver);
+        });
+
+      // BRONZE MEDALS
+      bars.data(datalist)
+        .enter()
+        .append('rect')
+        .style('fill', '#cd7f32')
+        .attr('x', function(d) {
+          return xRectPos + widthScale(d.Gold) + widthScale(d.Silver);
+        })
+        .attr('y', function(d, i) {
+          return (i+1) * yRowPos - rectHeight;
+        })
+        .attr('height', rectHeight)
+        .attr('width', function(d) {
+          return widthScale(d.Bronze);
+        });
+    }
+
+
+  </script>
 </html>
 
 
