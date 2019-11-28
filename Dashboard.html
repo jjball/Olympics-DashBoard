@@ -9,6 +9,7 @@
 		</style>
 	</head>
 	<body>
+    <button id="btnTotal">Total</button>
     <button id="btnGold">Gold</button>
     <button id="btnSilver">Silver</button>
     <button id="btnBronze">Bronze</button>
@@ -50,6 +51,32 @@
       readInData();
     });
 
+    function updateIndexes() {
+      for(var i = 0; i < datalist.length; i++) {
+        medals[datalist[i].country].index = i;
+      }
+    }
+
+    // Transitions the labels and stacked bar charts based on index value
+    // in the corresponding country object
+    function transitionChart() {
+      svg.selectAll('text')
+        .transition()
+        .duration(1000)
+        .ease(d3.easeLinear)
+        .attr('y', function(d) {
+          return (medals[d.country].index + 1) * yRowPos;
+        });
+
+      svg.selectAll('rect')
+        .transition()
+        .duration(1000)
+        .ease(d3.easeLinear)
+        .attr('y', function(d, i) {
+          return (medals[d.country].index + 1) * yRowPos - rectHeight;
+        });
+    }
+
     function readInData(){
       // put medal counts in medals object
       dataset.forEach(function(d) {
@@ -75,6 +102,7 @@
         var bVal = b.Gold + b.Silver + b.Bronze;
         return d3.descending(aVal, bVal);
       });
+      updateIndexes();
 
       // scale based on medal counts
       widthScale = d3.scaleLinear()
@@ -184,52 +212,8 @@
           var bVal = b.Gold;
           return d3.descending(aVal, bVal);
         });
-        // generateVisualization();
-
-        // // reorder rows based on gold medal counts
-        // bars
-        //   .transition()
-        //   .duration(1000)
-        //   .ease(d3.easeLinear)
-        //   .attr('y', function(d, i) {
-        //     return (i+1) * yRowPos - rectHeight;
-        //   });
-
-
-        // labels.transition()
-        //   .duration(1000)
-        //   .attr("y", function(d, i) {
-        //     return (i+1) * yRowPos;
-        //   });
-
-
-        // console.log(JSON.stringify(datalist));
-        svg.selectAll('text')
-          .data(datalist)
-          .transition()
-          .duration(1000)
-          .ease(d3.easeLinear)
-          .attr('x', xTextPos)
-          .attr('y', function(d, i) {
-            return (i+1) * yRowPos;
-          })
-          .style('fill',  'black')
-          .text( function (d) {
-            return d.country;
-          });
-
-        // svg.selectAll('rect')
-        //   .data(datalist)
-        //   .transition()
-        //   .duration(1000)
-        //   .ease(d3.easeLinear)
-        //   .attr('y', function(d, i) {
-        //     console.log(d.country + " " + i);
-        //     return (i+1) * yRowPos - rectHeight;
-        //   })
-        svg.selectAll('rect').remove();
-        generateVisualization();
-        console.log("filtered");
+        updateIndexes();
+        transitionChart();
       });
 
     d3.select('#btnSilver')
@@ -241,54 +225,35 @@
           var bVal = b.Silver;
           return d3.descending(aVal, bVal);
         });
-
-        svg.selectAll('text')
-          .data(datalist)
-          .transition()
-          .duration(1000)
-          .ease(d3.easeLinear)
-          .attr('x', xTextPos)
-          .attr('y', function(d, i) {
-            return (i+1) * yRowPos;
-          })
-          .style('fill',  'black')
-          .text( function (d) {
-            return d.country;
-          });
-
-        svg.selectAll('rect').remove();
-        generateVisualization();
+        updateIndexes();
+        transitionChart();
       });
 
     d3.select('#btnBronze')
       .on('click', function() {
 
-        // sort by silver medal count
+        // sort by bronze medal count
         datalist.sort(function(a, b) {
           var aVal = a.Bronze;
           var bVal = b.Bronze;
           return d3.descending(aVal, bVal);
         });
-
-        svg.selectAll('text')
-          .data(datalist)
-          .transition()
-          .duration(1000)
-          .ease(d3.easeLinear)
-          .attr('x', xTextPos)
-          .attr('y', function(d, i) {
-            return (i+1) * yRowPos;
-          })
-          .style('fill',  'black')
-          .text( function (d) {
-            return d.country;
-          });
-
-        svg.selectAll('rect').remove();
-        generateVisualization();
+        updateIndexes();
+        transitionChart();
       });
 
+    d3.select('#btnTotal')
+      .on('click', function() {
 
+        // sort by total medal count
+        datalist.sort(function(a, b) {
+          var aVal = a.Gold + a.Silver + a.Bronze;
+          var bVal = b.Gold + b.Silver + b.Bronze;
+          return d3.descending(aVal, bVal);
+        });
+        updateIndexes();
+        transitionChart();
+      });
 
   </script>
 </html>
