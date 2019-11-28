@@ -197,16 +197,7 @@
 
     d3.select('#btnGold')
       .on('click', function() {
-
-        // var bars = svg.selectAll('rect').data(datalist);
-
-        // // bars.exit()
-        // //   .transition()
-        // //   .duration(500)
-        // //   .attr('y', height)
-        // //   .remove();
-
-        // // sort by gold medal count
+        // sort by gold medal count
         datalist.sort(function(a, b) {
           var aVal = a.Gold;
           var bVal = b.Gold;
@@ -218,7 +209,6 @@
 
     d3.select('#btnSilver')
       .on('click', function() {
-
         // sort by silver medal count
         datalist.sort(function(a, b) {
           var aVal = a.Silver;
@@ -231,7 +221,6 @@
 
     d3.select('#btnBronze')
       .on('click', function() {
-
         // sort by bronze medal count
         datalist.sort(function(a, b) {
           var aVal = a.Bronze;
@@ -244,7 +233,6 @@
 
     d3.select('#btnTotal')
       .on('click', function() {
-
         // sort by total medal count
         datalist.sort(function(a, b) {
           var aVal = a.Gold + a.Silver + a.Bronze;
@@ -257,8 +245,4 @@
 
   </script>
 </html>
-
-
-
-
 
