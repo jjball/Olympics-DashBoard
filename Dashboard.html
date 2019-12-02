@@ -2,7 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8">
-		<title>A3</title>
+		<title>Olympics Dashboard</title>
 		<script type="text/javascript" src="https://d3js.org/d3.v5.min.js"></script>
 		<script type="text/javascript" src="https://d3js.org/d3-transition.v1.min.js"></script>
 		<style type="text/css">
@@ -26,14 +26,22 @@
     // globals
     var svg;
 
+    var svgMBSChart;
+    var yAxis;
+    var yScale;
+    var labelMBS;
+
+
     // data structures
     var dataset;
     var medals = {};
     var datalist = [];
 
+
     // constants
-    var width = 800;
+    var width = 400;
     var height;
+    var widthMBS = 800;
 
     var yRowPos = 30;
 
@@ -43,8 +51,24 @@
     var rectHeight = 11;
     var rectWidth = 200;
 
+
+    var xMedalsBySportChartPos = 100;
+    var yMedalsBySportChartPos = yRowPos;
+    var widthMedalsBySportChart;
+    var xBarPos = xMedalsBySportChartPos + 1;
+    var yBarPos = 30;
+    var yStartBarPos = 9;
+    var xMBSLabelPos = 150;
+    var yMBSLabelPos = 15;
+    var xMedalCountSpacing = 5;
+
+    var startCountry = "USA";
+    var barWidth = 500;
+
+
     // scaling functions
     var widthScale;
+    var widthScaleMBS;
 
     //Read the data
     d3.csv("Olympic-Data.csv").then(function(data) {
@@ -81,14 +105,25 @@
     function readInData(){
       // put medal counts in medals object
       dataset.forEach(function(d) {
-        if( medals[d.NOC] ){
+        if ( medals[d.NOC] ) {
           medals[d.NOC][d.Medal] += 1;
+
+          // increment medal count for sport
+          if ( medals[d.NOC]["sports"][d.Sport] ) {
+            medals[d.NOC]["sports"][d.Sport] += 1;
+          } else {
+            medals[d.NOC]["sports"][d.Sport] = 1;
+          }
         } else {
           medals[d.NOC] = {};
           medals[d.NOC]["Gold"] = 0;
           medals[d.NOC]["Silver"] = 0;
           medals[d.NOC]["Bronze"] = 0;
           medals[d.NOC][d.Medal] += 1;
+
+          // create sports object and set to 1
+          medals[d.NOC]["sports"] = {};
+          medals[d.NOC]["sports"][d.Sport] = 1;
         }
       });
 
@@ -117,17 +152,101 @@
         ])
         .range([1, rectWidth]);
 
+      widthScaleMBS = d3.scaleLinear()
+        .domain([
+          0,
+          d3.max(Object.keys(medals), function(d) {
+            return d3.max(Object.values(medals[d]["sports"]));
+          }),
+        ])
+        .range([0, barWidth]);
 
-      //create svg element
+      //create svg elements
       height = (datalist.length * yRowPos) + (2 * yRowPos);
       svg = d3.select("body")
             .append("svg")
             .attr("width", width)
             .attr("height", height);
+      
+      svgMBSChart = d3.select("body")
+                 .append("svg")
+                 .attr("width", widthMBS)
+                 .attr("height", height);
 
       generateVisualization();
     }
 
+    function updateMedalsBySportChart(country) {
+
+      // update chart title
+      labelMBS
+        .text("Medals by Sport: " + country);
+
+      // create a list of sport data for sorting
+      var dataListMBS = Object.keys(medals[country]["sports"]).map(function(sport) {
+        return { "sport": sport, "medals": medals[country]["sports"][sport]};
+      });
+      // sort the list of sports by number of medals
+      dataListMBS.sort(function(a,b) {
+        var aVal = a.medals;
+        var bVal = b.medals;
+        return d3.descending(aVal, bVal);
+      });
+
+      // resize y axis according to number of sports
+      yScale = d3.scaleBand().range([0, dataListMBS.length * (yRowPos)]);
+      // update the domain with current country's sports
+      yScale.domain(dataListMBS.map(function(d) {
+        return d.sport;
+      }));
+      // update the y axis
+      yAxis.transition().duration(1000).call(d3.axisLeft(yScale));
+
+      // update the bars
+      svgMBSChart.selectAll('rect').transition().duration(500).remove();
+      var barsMBS = svgMBSChart.selectAll('rect').data(dataListMBS);
+
+      barsMBS
+        .enter()
+        .append('rect')
+        .merge(barsMBS)
+        .transition()
+        .duration(1000)
+        .style('fill', 'grey')
+        .attr('x', function(d) {
+          return xBarPos;
+        })
+        .attr('y', function(d, i) {
+          return (i+1) * yBarPos + yStartBarPos;
+        })
+        .attr('height', rectHeight)
+        .attr('width', function(d) {
+          return widthScaleMBS(d.medals);
+        });
+
+      // SPORT MEDAL COUNT LABELS
+      svgMBSChart.selectAll('#labelsSport').transition().duration(500).remove();
+      var labelsSport = svgMBSChart.selectAll('#labelsSport').data(dataListMBS);
+
+      labelsSport
+        .enter()
+        .append('text')
+        .merge(labelsSport)
+        .transition()
+        .duration(1000)
+        .attr('id', "labelsSport")
+        .attr('x', function(d) {
+          return xBarPos + widthScaleMBS(d.medals) + xMedalCountSpacing;
+        })
+        .attr('y', function(d, i) {
+          return (i+1) * yBarPos + yStartBarPos + yStartBarPos;
+        })
+        .attr('font-size', "14px")
+        .style('fill',  'grey')
+        .text( function(d) {
+          return d.medals;
+        });
+    }
 
     // draws the visualization using d3
     function generateVisualization(){
@@ -143,8 +262,11 @@
           return (i+1) * yRowPos;
         })
         .style('fill',  'black')
-        .text( function (d) {
+        .text( function(d) {
           return d.country;
+        })
+        .on('click', function(d) {
+          updateMedalsBySportChart(d.country);
         });
 
       var bars = svg.selectAll('rect').data(datalist);
@@ -193,6 +315,78 @@
         .attr('height', rectHeight)
         .attr('width', function(d) {
           return widthScale(d.Bronze);
+        });
+
+      // append g (group) for bar chart (medals by sport)
+      var g = svgMBSChart.append("g")
+        .attr("transform", "translate(" + xMedalsBySportChartPos + "," + yMedalsBySportChartPos + ")");
+
+      // create label for title
+      labelMBS = svgMBSChart.append('text');
+
+      labelMBS
+        .attr('x', xMBSLabelPos)
+        .attr('y', yMBSLabelPos)
+        .style('fill',  'black')
+        .text("Medals by Sport: " + startCountry);
+
+      // create a list for sport data to sort, for starting country
+      var dataListMBS = Object.keys(medals[startCountry]["sports"]).map(function(sport) {
+        return { "sport": sport, "medals": medals[startCountry]["sports"][sport]};
+      });
+      // sort the sport data by number of medals
+      dataListMBS.sort(function(a,b) {
+        var aVal = a.medals;
+        var bVal = b.medals;
+        return d3.descending(aVal, bVal);
+      });
+
+      // scale y axis by number of sports for country
+      yScale = d3.scaleBand().range([0, dataListMBS.length * yRowPos]);
+      yScale.domain(dataListMBS.map(function(d) {
+        return d.sport;
+      }));
+      // add the y axis
+      yAxis = svgMBSChart.selectAll("g").append("g");
+      yAxis.call(d3.axisLeft(yScale));
+
+      // create bars for bar chart
+      var barsMBS = svgMBSChart.selectAll('rect').data(dataListMBS);
+
+      barsMBS
+        .enter()
+        .append('rect')
+        .merge(barsMBS)
+        .style('fill', 'grey')
+        .attr('x', function(d) {
+          return xBarPos;
+        })
+        .attr('y', function(d, i) {
+          return (i+1) * yBarPos + yStartBarPos;
+        })
+        .attr('height', rectHeight)
+        .attr('width', function(d) {
+          return widthScaleMBS(d.medals);
+        });
+
+      // SPORT MEDAL COUNT LABELS
+      var labelsSport = svgMBSChart.selectAll('#labelsSport').data(dataListMBS);
+
+      labelsSport
+        .enter()
+        .append('text')
+        .attr('id', "labelsSport")
+        .merge(labelsSport)
+        .attr('x', function(d) {
+          return xBarPos + widthScaleMBS(d.medals) + xMedalCountSpacing;
+        })
+        .attr('y', function(d, i) {
+          return (i+1) * yBarPos + yStartBarPos + yStartBarPos;
+        })
+        .attr('font-size', "14px")
+        .style('fill',  'grey')
+        .text( function(d) {
+          return d.medals;
         });
     }
 
@@ -246,4 +440,3 @@
 
   </script>
 </html>
-
