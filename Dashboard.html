@@ -305,6 +305,7 @@
         })
         .attr('height', rectHeight)
         .attr('width', function(d) {
+          if (d.Gold === 0) return 0;
           return widthScale(d.Gold);
         });
 
@@ -321,6 +322,7 @@
         })
         .attr('height', rectHeight)
         .attr('width', function(d) {
+          if (d.Silver === 0) return 0;
           return widthScale(d.Silver);
         });
 
@@ -337,6 +339,7 @@
         })
         .attr('height', rectHeight)
         .attr('width', function(d) {
+          if (d.Bronze === 0) return 0;
           return widthScale(d.Bronze);
         });
 
