@@ -31,6 +31,7 @@
     var yScale;
     var labelMBS;
 
+    var medalSortType = totalColour;
 
     // data structures
     var dataset;
@@ -49,7 +50,7 @@
 
     var xRectPos = xTextPos + 50;
     var rectHeight = 11;
-    var rectWidth = 200;
+    var rectWidth = 300;
 
 
     var xMedalsBySportChartPos = 100;
@@ -65,6 +66,10 @@
     var startCountry = "USA";
     var barWidth = 500;
 
+    var gold = "Gold";
+    var silver = "Silver";
+    var bronze = '#cd7f32';
+    var totalColour = "Black";
 
     // scaling functions
     var widthScale;
@@ -91,6 +96,23 @@
         .ease(d3.easeLinear)
         .attr('y', function(d) {
           return (medals[d.country].index + 1) * yRowPos;
+        });
+
+      svg.selectAll('#labelsMedalCount')
+        .transition()
+        .duration(1000)
+        .ease(d3.easeLinear)
+        .style('fill', function(d) {
+          return medalSortType;
+        })
+        .attr('y', function(d) {
+          return (medals[d.country].index + 1) * yRowPos;
+        })
+        .text( function(d) {
+          if(medalSortType === gold) return d.Gold;
+          if(medalSortType === silver) return d.Silver;
+          if(medalSortType === bronze) return d.Bronze;
+          return d.Gold + d.Silver + d.Bronze;
         });
 
       svg.selectAll('rect')
@@ -167,7 +189,7 @@
             .append("svg")
             .attr("width", width)
             .attr("height", height);
-      
+
       svgMBSChart = d3.select("body")
                  .append("svg")
                  .attr("width", widthMBS)
@@ -269,19 +291,44 @@
           updateMedalsBySportChart(d.country);
         });
 
+      // MEDAL COUNT LABELS
+      labels
+        .enter()
+        .append('text')
+        .attr('id', "labelsMedalCount")
+        .attr('x', function(d) {
+          return xRectPos
+            + widthScale(d.Gold)
+            + widthScale(d.Silver)
+            + widthScale(d.Bronze)
+            + xMedalCountSpacing;
+        })
+        .attr('y', function(d, i) {
+          return (i+1) * yRowPos;
+        })
+        .attr('font-size', "14px")
+        .style('fill',  'black')
+        .text( function(d) {
+          return d.Gold + d.Silver + d.Bronze;
+        })
+        .on('click', function(d) {
+          updateMedalsBySportChart(d.country);
+        });
+
       var bars = svg.selectAll('rect').data(datalist);
 
       // GOLD MEDALS
       bars
         .enter()
         .append('rect')
-        .style('fill', 'gold')
+        .style('fill', gold)
         .attr('x', xRectPos)
         .attr('y', function(d, i) {
           return (i+1) * yRowPos - rectHeight;
         })
         .attr('height', rectHeight)
         .attr('width', function(d) {
+          if (d.Gold === 0) return 0;
           return widthScale(d.Gold);
         });
 
@@ -289,7 +336,7 @@
       bars
         .enter()
         .append('rect')
-        .style('fill', 'silver')
+        .style('fill', silver)
         .attr('x', function(d) {
           return xRectPos + widthScale(d.Gold);
         })
@@ -298,6 +345,7 @@
         })
         .attr('height', rectHeight)
         .attr('width', function(d) {
+          if (d.Silver === 0) return 0;
           return widthScale(d.Silver);
         });
 
@@ -305,7 +353,7 @@
       bars
         .enter()
         .append('rect')
-        .style('fill', '#cd7f32')
+        .style('fill', bronze)
         .attr('x', function(d) {
           return xRectPos + widthScale(d.Gold) + widthScale(d.Silver);
         })
@@ -314,6 +362,7 @@
         })
         .attr('height', rectHeight)
         .attr('width', function(d) {
+          if (d.Bronze === 0) return 0;
           return widthScale(d.Bronze);
         });
 
@@ -398,6 +447,7 @@
           var bVal = b.Gold;
           return d3.descending(aVal, bVal);
         });
+        medalSortType = gold;
         updateIndexes();
         transitionChart();
       });
@@ -410,6 +460,7 @@
           var bVal = b.Silver;
           return d3.descending(aVal, bVal);
         });
+        medalSortType = silver;
         updateIndexes();
         transitionChart();
       });
@@ -422,6 +473,7 @@
           var bVal = b.Bronze;
           return d3.descending(aVal, bVal);
         });
+        medalSortType = bronze;
         updateIndexes();
         transitionChart();
       });
@@ -434,6 +486,7 @@
           var bVal = b.Gold + b.Silver + b.Bronze;
           return d3.descending(aVal, bVal);
         });
+        medalSortType = totalColour;
         updateIndexes();
         transitionChart();
       });
