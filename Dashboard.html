@@ -167,7 +167,7 @@
             .append("svg")
             .attr("width", width)
             .attr("height", height);
-      
+
       svgMBSChart = d3.select("body")
                  .append("svg")
                  .attr("width", widthMBS)
@@ -264,6 +264,29 @@
         .style('fill',  'black')
         .text( function(d) {
           return d.country;
+        })
+        .on('click', function(d) {
+          updateMedalsBySportChart(d.country);
+        });
+
+      // MEDAL COUNT LABELS
+      labels
+        .enter()
+        .append('text')
+        .attr('x', function(d) {
+          return xRectPos
+            + widthScale(d.Gold)
+            + widthScale(d.Silver)
+            + widthScale(d.Bronze)
+            + xMedalCountSpacing;
+        })
+        .attr('y', function(d, i) {
+          return (i+1) * yRowPos;
+        })
+        .attr('font-size', "14px")
+        .style('fill',  'black')
+        .text( function(d) {
+          return d.Gold + d.Silver + d.Bronze;
         })
         .on('click', function(d) {
           updateMedalsBySportChart(d.country);
