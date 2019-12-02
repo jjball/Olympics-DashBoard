@@ -14,7 +14,6 @@
     <button id="btnSilver">Silver</button>
     <button id="btnBronze">Bronze</button>
     <br/>
-    
   </body>
 
   <script type="text/javascript">
@@ -27,10 +26,9 @@
     // globals
     var svg;
 
-    var svgChart;
+    var svgMBSChart;
     var yAxis;
     var yScale;
-    var barsChart;
     var labelMBS;
 
 
@@ -170,7 +168,7 @@
             .attr("width", width)
             .attr("height", height);
       
-      svgChart = d3.select("body")
+      svgMBSChart = d3.select("body")
                  .append("svg")
                  .attr("width", widthMBS)
                  .attr("height", height);
@@ -185,35 +183,33 @@
         .text("Medals by Sport: " + country);
 
       // create a list of sport data for sorting
-      var dataListBarChart = Object.keys(medals[country]["sports"]).map(function(sport) {
+      var dataListMBS = Object.keys(medals[country]["sports"]).map(function(sport) {
         return { "sport": sport, "medals": medals[country]["sports"][sport]};
       });
       // sort the list of sports by number of medals
-      dataListBarChart.sort(function(a,b) {
+      dataListMBS.sort(function(a,b) {
         var aVal = a.medals;
         var bVal = b.medals;
         return d3.descending(aVal, bVal);
       });
 
-
       // resize y axis according to number of sports
-      yScale = d3.scaleBand().range([0, dataListBarChart.length * (yRowPos)]);
+      yScale = d3.scaleBand().range([0, dataListMBS.length * (yRowPos)]);
       // update the domain with current country's sports
-      yScale.domain(dataListBarChart.map(function(d) {
+      yScale.domain(dataListMBS.map(function(d) {
         return d.sport;
       }));
       // update the y axis
       yAxis.transition().duration(1000).call(d3.axisLeft(yScale));
 
-
       // update the bars
-      svgChart.selectAll('rect').transition().duration(500).remove();
-      barsChart = svgChart.selectAll('rect').data(dataListBarChart);
+      svgMBSChart.selectAll('rect').transition().duration(500).remove();
+      var barsMBS = svgMBSChart.selectAll('rect').data(dataListMBS);
 
-      barsChart
+      barsMBS
         .enter()
         .append('rect')
-        .merge(barsChart)
+        .merge(barsMBS)
         .transition()
         .duration(1000)
         .style('fill', 'grey')
@@ -229,8 +225,8 @@
         });
 
       // SPORT MEDAL COUNT LABELS
-      svgChart.selectAll('#labelsSport').transition().duration(500).remove();
-      var labelsSport = svgChart.selectAll('#labelsSport').data(dataListBarChart);
+      svgMBSChart.selectAll('#labelsSport').transition().duration(500).remove();
+      var labelsSport = svgMBSChart.selectAll('#labelsSport').data(dataListMBS);
 
       labelsSport
         .enter()
@@ -239,7 +235,6 @@
         .transition()
         .duration(1000)
         .attr('id', "labelsSport")
-
         .attr('x', function(d) {
           return xBarPos + widthScaleMBS(d.medals) + xMedalCountSpacing;
         })
@@ -322,13 +317,12 @@
           return widthScale(d.Bronze);
         });
 
-
       // append g (group) for bar chart (medals by sport)
-      var g = svgChart.append("g")
+      var g = svgMBSChart.append("g")
         .attr("transform", "translate(" + xMedalsBySportChartPos + "," + yMedalsBySportChartPos + ")");
 
       // create label for title
-      labelMBS = svgChart.append('text');
+      labelMBS = svgMBSChart.append('text');
 
       labelMBS
         .attr('x', xMBSLabelPos)
@@ -336,34 +330,33 @@
         .style('fill',  'black')
         .text("Medals by Sport: " + startCountry);
 
-
       // create a list for sport data to sort, for starting country
-      var dataListBarChart = Object.keys(medals[startCountry]["sports"]).map(function(sport) {
+      var dataListMBS = Object.keys(medals[startCountry]["sports"]).map(function(sport) {
         return { "sport": sport, "medals": medals[startCountry]["sports"][sport]};
       });
       // sort the sport data by number of medals
-      dataListBarChart.sort(function(a,b) {
+      dataListMBS.sort(function(a,b) {
         var aVal = a.medals;
         var bVal = b.medals;
         return d3.descending(aVal, bVal);
       });
 
       // scale y axis by number of sports for country
-      yScale = d3.scaleBand().range([0, dataListBarChart.length * yRowPos]);
-      yScale.domain(dataListBarChart.map(function(d) {
+      yScale = d3.scaleBand().range([0, dataListMBS.length * yRowPos]);
+      yScale.domain(dataListMBS.map(function(d) {
         return d.sport;
       }));
       // add the y axis
-      yAxis = svgChart.selectAll("g").append("g");
+      yAxis = svgMBSChart.selectAll("g").append("g");
       yAxis.call(d3.axisLeft(yScale));
 
       // create bars for bar chart
-      barsChart = svgChart.selectAll('rect').data(dataListBarChart);
+      var barsMBS = svgMBSChart.selectAll('rect').data(dataListMBS);
 
-      barsChart
+      barsMBS
         .enter()
         .append('rect')
-        .merge(barsChart)
+        .merge(barsMBS)
         .style('fill', 'grey')
         .attr('x', function(d) {
           return xBarPos;
@@ -377,7 +370,7 @@
         });
 
       // SPORT MEDAL COUNT LABELS
-      var labelsSport = svgChart.selectAll('#labelsSport').data(dataListBarChart);
+      var labelsSport = svgMBSChart.selectAll('#labelsSport').data(dataListMBS);
 
       labelsSport
         .enter()
@@ -447,4 +440,3 @@
 
   </script>
 </html>
-
