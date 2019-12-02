@@ -105,6 +105,9 @@
         .style('fill', function(d) {
           return medalSortType;
         })
+        .attr('y', function(d) {
+          return (medals[d.country].index + 1) * yRowPos;
+        })
         .text( function(d) {
           if(medalSortType === gold) return d.Gold;
           if(medalSortType === silver) return d.Silver;
